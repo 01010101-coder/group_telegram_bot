@@ -1,4 +1,4 @@
-from aiogram import Router, types
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -6,9 +6,8 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters.callback_data import CallbackData
 from typing import Optional
 
-from keyboards.general_keyboards import main_menu_keyboard
 from keyboards.admin_keyboards import approval_keyboard
-from db import UsersTable
+from db.users_db import UsersTable
 
 router = Router()
 users_db = UsersTable()
@@ -85,8 +84,3 @@ async def callbacks_user_confirmation(callback: CallbackQuery, callback_data: Us
         # Уведомление администратора и пользователя
         await callback.message.edit_text("Пользователь был отклонен.")
         await callback.bot.send_message(chat_id=callback_data.tg_id, text="Что-то не так, тебя не подтвердили(")
-
-
-@router.message()
-async def process_function(message: types.Message):
-    await message.answer("Что надо?", reply_markup=main_menu_keyboard())

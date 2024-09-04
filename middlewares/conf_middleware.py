@@ -1,10 +1,9 @@
-import asyncio
 from typing import Any, Callable, Dict, Awaitable
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from aiogram import Bot
 
-from db import UsersTable
+from db.users_db import UsersTable
 
 users_db = UsersTable()
 

@@ -1,5 +1,6 @@
 import aiosqlite
 
+
 class UsersTable:
     def __init__(self, db_path='my_database.db'):
         self.db_path = db_path
