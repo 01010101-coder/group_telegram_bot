@@ -20,3 +20,16 @@ def update_state_keyboard(prev_action) -> InlineKeyboardMarkup:
             ]
         ]
     )
+
+
+def choose_enter_method() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Вручную", callback_data="manually_enter")
+            ],
+            [
+                InlineKeyboardButton(text="Через нейросеть(BETA)", callback_data="gpt_enter")
+            ]
+        ]
+    )

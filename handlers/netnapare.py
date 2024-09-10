@@ -2,7 +2,7 @@ from aiogram import Router, types
 from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-
+from keyboards.general_keyboards import choose_enter_method
 
 from aiogram.filters import Command
 from aiogram.filters import StateFilter
@@ -20,6 +20,8 @@ class GetData(StatesGroup):
     choosing_pairs = State()
     choosing_reason = State()
 
+class GetDataGpt(StatesGroup):
+    choosing_text = State()
 
 @router.message(StateFilter(None), Command(commands=['cancel']))
 @router.message(StateFilter(None), F.text.lower() == 'стоп')
@@ -42,6 +44,31 @@ async def cmd_cancel_in_state(message: Message, state: FSMContext):
 
 
 @router.callback_query(F.data == "net_na_pare")
+async def choose_method(callback: types.CallbackQuery):
+    await callback.message.delete()
+    await callback.message.answer(
+        text="Как вводить данные?",
+        reply_markup=choose_enter_method()
+    )
+
+
+@router.callback_query(F.data == "gpt_enter")
+async def gpt_method(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.delete()
+    await callback.message.answer(
+        text="Напиши полное сообщение когда тебя не будет, на каких парах и причину"
+    )
+    await state.set_state(GetDataGpt.choosing_text)
+
+
+@router.message(GetDataGpt.choosing_text)
+async def process_text(message: Message, state: FSMContext):
+    await message.answer(
+        text=message.text.lower()
+    )
+    await state.clear()
+
+@router.callback_query(F.data == "manually_enter")
 async def start_accepting(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.delete()
     await callback.message.answer(

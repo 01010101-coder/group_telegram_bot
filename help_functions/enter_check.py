@@ -4,7 +4,9 @@ months = ['январь', 'февраль', 'март', 'апрель', 'май'
 
 
 def check_for_invalid_date(number):
-    pass
+    if 0 < number < 32:
+        return True
+    return False
 
 
 def check_for_key_words(text):
@@ -16,10 +18,15 @@ def check_for_key_words(text):
 def check_for_number_date(text):
     try:
         date = int(text)
-        print(f"{date} + текущий месяц")
-        return True
     except ValueError:
         return False
+
+    is_data_valid = check_for_invalid_date(date)
+    if is_data_valid:
+        print(f"{date} + текущий месяц")
+        return True
+
+    return False
 
 
 def check_for_date_text(text):
@@ -30,7 +37,7 @@ def check_for_date_text(text):
         except ValueError:
             return False
 
-        if words[1] in months:
+        if words[1] in months and check_for_invalid_date(words[0]):
             print(f"{words[0]} + {words[1]} - число + месяц")
         else:
             return False
@@ -47,15 +54,13 @@ def check_for_date_format(text):
                 words[i] = int(words[i])
         except ValueError:
             return False
+
+        for i in range(len(words) - 1):
+            if not check_for_invalid_date(words[i]):
+                return False
         print(f"{words} - полный формат")
         return True
     else:
         return False
 
 
-print(check_for_key_words('сегодня'))
-print(check_for_date_format('14.01.2024'))
-print(check_for_date_format('05.05.2025'))
-print(check_for_number_date('20'))
-print(check_for_date_text('20 сентября'))
-print(check_for_date_text('13 декабря'))
