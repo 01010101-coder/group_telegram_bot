@@ -11,6 +11,17 @@ def main_menu_keyboard() -> InlineKeyboardMarkup:
     )
 
 
+def is_correct_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Да", callback="correct_inf"),
+                InlineKeyboardButton(text="Нет", callback="notcorrect_inf")
+            ]
+        ]
+    )
+
+
 def update_state_keyboard(prev_action) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
