@@ -55,3 +55,5 @@ def parse_date(text):
 
     # Если дата не распознана
     return "Неправильный формат даты"
+
+print(parse_date('абоба'))

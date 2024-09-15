@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from dotenv import load_dotenv
 import os
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -36,6 +36,7 @@ async def on_shutdown():
 async def main():
     await on_startup()
 
+    dp.message.filter(F.text)
     dp.update.outer_middleware(conf_middleware.ConfirmationMiddleware())
     dp.include_router(netnapare.router)
     dp.include_router(registration.router)
