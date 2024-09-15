@@ -14,8 +14,21 @@ from aiogram import F
 
 from db.users_db import UsersTable
 
+from yandexgpt.request_class import YandexPrompt
+import logging
+from dotenv import load_dotenv
+import os
+import json
+
 router = Router()
 users_db = UsersTable()
+
+logging.basicConfig(level=logging.INFO)
+
+load_dotenv('settings.env')
+
+bot_token = os.getenv("YANDEX_TOKEN")
+url_path = os.getenv("URL_PATH")
 
 
 class GetData(StatesGroup):
@@ -68,8 +81,14 @@ async def gpt_method(callback: types.CallbackQuery, state: FSMContext):
 
 @router.message(GetDataGpt.choosing_text)
 async def process_text(message: Message, state: FSMContext):
+    text = message.text.lower()
+    prompt = YandexPrompt(bot_token, url_path)
+    result = prompt.request(text)
+    print(result)
+    dict_as_str = json.dumps(result, ensure_ascii=False)
+
     await message.answer(
-        text=message.text.lower()
+        text=dict_as_str
     )
     await state.clear()
 
@@ -140,4 +159,3 @@ async def process_reason(message: Message, state: FSMContext):
 
 
 # Обработка правильная или неправильная информация
-
