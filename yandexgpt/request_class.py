@@ -10,7 +10,7 @@ class YandexPrompt:
 
     def request(self, text):
         today = datetime.today().strftime('%d.%m.%Y')
-        print(text + today)
+        print(text + "{" + today + "}")
         prompt = {
             "messages": [
                 {
@@ -18,13 +18,13 @@ class YandexPrompt:
                     "role": "system"
                 },
                 {
-                    "text": f"{text}{{today}}",
+                    "text": str(text + "{" + today + "}"),
                     "role": "user"
                 }
             ],
             "completionOptions": {
                 "stream": True,
-                "maxTokens": "500",
+                "maxTokens": "1000",
                 "temperature": 0.1
             },
             "modelUri": f"{self.url_path}"

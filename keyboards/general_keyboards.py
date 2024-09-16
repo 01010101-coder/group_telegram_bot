@@ -15,8 +15,8 @@ def is_correct_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
-                InlineKeyboardButton(text="Да", callback="correct_inf"),
-                InlineKeyboardButton(text="Нет", callback="notcorrect_inf")
+                InlineKeyboardButton(text="Да", callback_data="correct_inf"),
+                InlineKeyboardButton(text="Нет", callback_data="notcorrect_inf")
             ]
         ]
     )
@@ -39,8 +39,8 @@ def choose_enter_method() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(text="Вручную", callback_data="manually_enter")
             ],
-            [
-                InlineKeyboardButton(text="Через нейросеть(BETA)", callback_data="gpt_enter")
-            ]
+            # [
+            #     InlineKeyboardButton(text="Через нейросеть(BETA)", callback_data="gpt_enter")
+            # ]
         ]
     )

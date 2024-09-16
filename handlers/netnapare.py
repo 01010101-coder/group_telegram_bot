@@ -158,4 +158,16 @@ async def process_reason(message: Message, state: FSMContext):
     await message.answer(text=text, reply_markup=is_correct_keyboard())
 
 
-# Обработка правильная или неправильная информация
+@router.callback_query(F.data == "correct_inf")
+async def process_correct_data(callback: types.CallbackQuery, state: FSMContext):
+    print(await state.get_data())
+    await callback.message.delete()
+    await callback.message.answer(text="Информация отправлена")
+    await state.clear()
+
+
+@router.callback_query(F.data == "notcorrect_inf")
+async def process_not_correct_data(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.delete()
+    await callback.message.answer(text="Попробуй еще")
+    await state.clear()
