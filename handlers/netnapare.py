@@ -13,6 +13,7 @@ from aiogram.filters import StateFilter
 from aiogram import F
 
 from db.users_db import UsersTable
+from db.netnapare_db import SkipTable
 
 from yandexgpt.request_class import YandexPrompt
 import logging
@@ -22,6 +23,7 @@ import json
 
 router = Router()
 users_db = UsersTable()
+skip_db = SkipTable()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -63,6 +65,7 @@ async def cmd_cancel_in_state(message: Message, state: FSMContext):
 
 @router.callback_query(F.data == "net_na_pare")
 async def choose_method(callback: types.CallbackQuery):
+    print(callback.from_user.id)
     await callback.message.delete()
     await callback.message.answer(
         text="Как вводить данные?",
@@ -160,9 +163,26 @@ async def process_reason(message: Message, state: FSMContext):
 
 @router.callback_query(F.data == "correct_inf")
 async def process_correct_data(callback: types.CallbackQuery, state: FSMContext):
-    print(await state.get_data())
+    data = await state.get_data()
+    await skip_db.add_skip(callback.from_user.id,
+                           data['choosing_date'],
+                           data['choosing_pairs'],
+                           data['choosing_reason'])
     await callback.message.delete()
-    await callback.message.answer(text="Информация отправлена")
+
+    admins = await users_db.get_users_by_rank(3)
+
+    # Отправляем сообщение админам о пропуске человека    # for admin in admins:
+    #     admin_tg_id = admin[2]  # tg_id администратора
+    #     if tg_username == "None":
+    #         tg_username = "Не существует"
+    #     await callback.message.bot.send_message(
+    #         chat_id=admin_tg_id,
+    #         text=f"{}",
+    #         reply_markup=approval_keyboard(tg_id)
+    #     )
+    #     await callback.message.answer(text="Информация отправлена")
+
     await state.clear()
 
 

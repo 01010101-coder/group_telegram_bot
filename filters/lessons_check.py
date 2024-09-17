@@ -61,12 +61,3 @@ def parse_lessons(text):
             return "Ошибка: Некорректный ввод для формата диапазона."
 
     return "Ошибка: Некорректный ввод."
-
-# Примеры использования:
-print(parse_lessons("1"))          # [1]
-print(parse_lessons("3"))          # [3]
-print(parse_lessons("1, 3"))       # [1, 3]
-print(parse_lessons("2-4"))        # [2, 3, 4]
-print(parse_lessons("3 и 5"))      # [3, 5]
-print(parse_lessons("весь день"))  # [1, 2, 3, 4, 5]
-print(parse_lessons("6"))          # Ошибка
