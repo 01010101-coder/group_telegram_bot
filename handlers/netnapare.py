@@ -19,16 +19,19 @@ from aiogram import F
 
 from db.users_db import UsersTable
 from db.netnapare_db import SkipTable
+from db.logs_db import LogsTable
 
 from yandexgpt.request_class import YandexPrompt
 import logging
 from dotenv import load_dotenv
 import os
 import json
+from datetime import datetime
 
 router = Router()
 users_db = UsersTable()
 skip_db = SkipTable()
+log_db = LogsTable()
 
 logging.basicConfig(level=logging.INFO)
 
@@ -52,6 +55,7 @@ class SkipApprovalCallback(CallbackData, prefix="skip"):
     action: str  # "approve" или "reject"
     tg_id: Optional[int] = None
     date: Optional[str] = None
+    start_reg: Optional[str] = None
 
 
 @router.message(StateFilter(None), Command(commands=['cancel']))
@@ -67,6 +71,10 @@ async def cmd_cancel_no_state(message: Message, state: FSMContext):
 @router.message(Command(commands=['cancel']))
 @router.message(F.text.lower() == 'стоп')
 async def cmd_cancel_in_state(message: Message, state: FSMContext):
+    data = await state.get_data()
+    time_spent = (datetime.now() - data['start_reg']).total_seconds()
+    await log_db.add_log('skip', time_spent, 0)
+
     await state.clear()
     await message.answer(
         text="Действие отменено",
@@ -110,6 +118,10 @@ async def process_text(message: Message, state: FSMContext):
 @router.callback_query(F.data == "manually_enter")
 async def start_accepting(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.delete()
+
+    start_reg = datetime.now()
+    await state.update_data(start_reg=start_reg)
+
     await callback.message.answer(
         text="Когда не будет?"
     )
@@ -163,7 +175,6 @@ async def process_pairs(message: Message, state: FSMContext):
 async def process_reason(message: Message, state: FSMContext):
     await state.update_data(choosing_reason=message.text.lower())
     data = await state.get_data()
-    print(data)
     text = ""
     text += f'''Дата: {data['choosing_date']}
 Пары: {data['choosing_pairs']}
@@ -181,6 +192,9 @@ async def process_correct_data(callback: types.CallbackQuery, state: FSMContext)
                            data['choosing_reason'])
     await callback.message.delete()
 
+    time_spent = (datetime.now() - data['start_reg']).total_seconds()
+    await log_db.add_log('skip', time_spent, 1)
+
     person = await users_db.get_user_by_tg_id(callback.from_user.id)
     person = person[1]
     admins = await users_db.get_users_by_rank(3)
@@ -193,7 +207,7 @@ async def process_correct_data(callback: types.CallbackQuery, state: FSMContext)
             reply_markup=skip_approval_keyboard(tg_id=admin_tg_id, date=data['choosing_date'])
         )
         await callback.message.answer(text="Информация отправлена")
-
+    print("state cleared")
     await state.clear()
 
 
@@ -206,6 +220,7 @@ async def process_not_correct_data(callback: types.CallbackQuery, state: FSMCont
 
 @router.callback_query(SkipApprovalCallback.filter())
 async def callbacks_user_confirmation(callback: CallbackQuery, callback_data: SkipApprovalCallback):
+    print("Ya tut")
     if callback_data.action == "approve":
         await callback.message.delete()
 

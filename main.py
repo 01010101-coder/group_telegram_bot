@@ -7,8 +7,10 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from middlewares import conf_middleware
 from handlers import registration, netnapare, general
+
 from db.users_db import UsersTable
 from db.netnapare_db import SkipTable
+from db.logs_db import LogsTable
 
 logging.basicConfig(level=logging.INFO)
 
@@ -25,17 +27,19 @@ dp = Dispatcher(storage=MemoryStorage())
 
 users_db = UsersTable()
 skip_db = SkipTable()
+log_db = LogsTable()
 
 
 async def on_startup():
     await users_db.initialize_table()
     await skip_db.initialize_table()
+    await log_db.initialize_table()
 
 
 async def on_shutdown():
     await users_db.close()
     await skip_db.close()
-
+    await log_db.close()
 
 async def main():
     await on_startup()

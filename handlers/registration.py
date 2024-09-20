@@ -8,9 +8,13 @@ from typing import Optional
 
 from keyboards.admin_keyboards import reg_approval_keyboard
 from db.users_db import UsersTable
+from db.logs_db import LogsTable
+
+from datetime import datetime
 
 router = Router()
 users_db = UsersTable()
+log_db = LogsTable()
 
 
 # Класс для управления callback_data
@@ -22,17 +26,20 @@ class UserApprovalCallback(CallbackData, prefix="user"):
 # Определение состояний
 class Registration(StatesGroup):
     waiting_for_name = State()
+    start_reg: Optional[str] = None
 
 
 # Хэндлер для команды /start
 @router.message(Command("start"))
 async def cmd_start(message: Message, state: FSMContext):
     user = await users_db.get_user_by_tg_id(message.from_user.id)
+    await state.update_data(start_reg=datetime.now())
+
     if user is None:
         await message.answer("Тебя нет в базе данных, напиши свое имя и фамилию")
         await state.set_state(Registration.waiting_for_name)
-    elif user[4] == 0:
-        await message.answer(f"Ты еще не подтвержден, сори")
+    # elif user[4] == 0:
+    #     await message.answer(f"Ты еще не подтвержден, сори")
     else:
         await message.answer(f"Привет, {user[1]}")
 
@@ -46,6 +53,11 @@ async def process_name(message: Message, state: FSMContext):
 
     # Добавляем пользователя в базу данных
     await users_db.add_user(name, tg_id, tg_username)
+
+    start_reg = await state.get_data()
+    start_reg = start_reg['start_reg']
+    time_spend = (datetime.now() - start_reg).total_seconds()
+    await log_db.add_log('reg', time_spend, '1')
 
     # Завершаем состояние FSM
     await state.clear()
