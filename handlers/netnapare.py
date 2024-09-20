@@ -45,6 +45,7 @@ class GetData(StatesGroup):
     choosing_date = State()
     choosing_pairs = State()
     choosing_reason = State()
+    start_reg: Optional[str] = None
 
 
 class GetDataGpt(StatesGroup):
@@ -55,7 +56,6 @@ class SkipApprovalCallback(CallbackData, prefix="skip"):
     action: str  # "approve" или "reject"
     tg_id: Optional[int] = None
     date: Optional[str] = None
-    start_reg: Optional[str] = None
 
 
 @router.message(StateFilter(None), Command(commands=['cancel']))
@@ -84,7 +84,6 @@ async def cmd_cancel_in_state(message: Message, state: FSMContext):
 
 @router.callback_query(F.data == "net_na_pare")
 async def choose_method(callback: types.CallbackQuery):
-    print(callback.from_user.id)
     await callback.message.delete()
     await callback.message.answer(
         text="Как вводить данные?",
@@ -106,7 +105,6 @@ async def process_text(message: Message, state: FSMContext):
     text = message.text.lower()
     prompt = YandexPrompt(bot_token, url_path)
     result = prompt.request(text)
-    print(result)
     dict_as_str = json.dumps(result, ensure_ascii=False)
 
     await message.answer(
@@ -133,7 +131,6 @@ async def process_date(message: Message, state: FSMContext):
     date_text = message.text.lower()
 
     parsed_date = parse_date(date_text)
-    print(f"Распознанная дата: {parsed_date}")
 
     if parsed_date == "Неправильный формат даты":
         await message.answer(
@@ -159,11 +156,9 @@ async def process_pairs(message: Message, state: FSMContext):
         await message.answer(
             text="Неправильный ввод пар, попробуй еще раз"
         )
-        print(parsed_lessons)
         await state.set_state(GetData.choosing_pairs)
         return
 
-    print(f"Распознанные пары: {parsed_lessons}")
     await state.update_data(choosing_pairs=parsed_lessons)
     await message.answer(
         text="Причина?"
@@ -207,7 +202,6 @@ async def process_correct_data(callback: types.CallbackQuery, state: FSMContext)
             reply_markup=skip_approval_keyboard(tg_id=admin_tg_id, date=data['choosing_date'])
         )
         await callback.message.answer(text="Информация отправлена")
-    print("state cleared")
     await state.clear()
 
 
@@ -220,7 +214,6 @@ async def process_not_correct_data(callback: types.CallbackQuery, state: FSMCont
 
 @router.callback_query(SkipApprovalCallback.filter())
 async def callbacks_user_confirmation(callback: CallbackQuery, callback_data: SkipApprovalCallback):
-    print("Ya tut")
     if callback_data.action == "approve":
         await callback.message.delete()
 
