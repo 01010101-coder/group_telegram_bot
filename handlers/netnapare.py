@@ -1,8 +1,13 @@
 from aiogram import Router, types
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import ReplyKeyboardRemove
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.types import Message, CallbackQuery
+from aiogram.filters.callback_data import CallbackData
+from typing import Optional
+
 from keyboards.general_keyboards import choose_enter_method, is_correct_keyboard
+from keyboards.admin_keyboards import skip_approval_keyboard
 
 from filters.date_check import parse_date
 from filters.lessons_check import parse_lessons
@@ -41,6 +46,12 @@ class GetData(StatesGroup):
 
 class GetDataGpt(StatesGroup):
     choosing_text = State()
+
+
+class SkipApprovalCallback(CallbackData, prefix="skip"):
+    action: str  # "approve" или "reject"
+    tg_id: Optional[int] = None
+    date: Optional[str] = None
 
 
 @router.message(StateFilter(None), Command(commands=['cancel']))
@@ -170,18 +181,18 @@ async def process_correct_data(callback: types.CallbackQuery, state: FSMContext)
                            data['choosing_reason'])
     await callback.message.delete()
 
+    person = await users_db.get_user_by_tg_id(callback.from_user.id)
+    person = person[1]
     admins = await users_db.get_users_by_rank(3)
 
-    # Отправляем сообщение админам о пропуске человека    # for admin in admins:
-    #     admin_tg_id = admin[2]  # tg_id администратора
-    #     if tg_username == "None":
-    #         tg_username = "Не существует"
-    #     await callback.message.bot.send_message(
-    #         chat_id=admin_tg_id,
-    #         text=f"{}",
-    #         reply_markup=approval_keyboard(tg_id)
-    #     )
-    #     await callback.message.answer(text="Информация отправлена")
+    for admin in admins:
+        admin_tg_id = admin[2]  # tg_id администратора
+        await callback.message.bot.send_message(
+            chat_id=admin_tg_id,
+            text=f'{person} пропускает {data["choosing_pairs"]}, {data["choosing_date"]} потому что "{data["choosing_reason"]}"',
+            reply_markup=skip_approval_keyboard(tg_id=admin_tg_id, date=data['choosing_date'])
+        )
+        await callback.message.answer(text="Информация отправлена")
 
     await state.clear()
 
@@ -191,3 +202,16 @@ async def process_not_correct_data(callback: types.CallbackQuery, state: FSMCont
     await callback.message.delete()
     await callback.message.answer(text="Попробуй еще")
     await state.clear()
+
+
+@router.callback_query(SkipApprovalCallback.filter())
+async def callbacks_user_confirmation(callback: CallbackQuery, callback_data: SkipApprovalCallback):
+    if callback_data.action == "approve":
+        await callback.message.delete()
+
+    elif callback_data.action == "reject":
+        await skip_db.delete_skip(callback_data.tg_id, callback_data.date)
+        await callback.answer(
+            text="Почему-то твой пропуск не приняли ¯\_(ツ)_/¯"
+        )
+        await callback.message.delete()

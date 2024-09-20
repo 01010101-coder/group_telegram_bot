@@ -49,10 +49,10 @@ class SkipTable:
         if self.connection:
             await self.connection.close()
 
-    async def delete_skip(self, date):
+    async def delete_skip(self, tg_id, date):
         try:
             connection = await self._connect()
-            await connection.execute('DELETE FROM SkipHistory date = ?', (date,))
+            await connection.execute('DELETE FROM SkipHistory WHERE tg_id = ? AND date = ?', (tg_id, date, ))
             await connection.commit()
             return True
         except aiosqlite.Error as e:

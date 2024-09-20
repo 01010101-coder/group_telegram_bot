@@ -6,7 +6,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.filters.callback_data import CallbackData
 from typing import Optional
 
-from keyboards.admin_keyboards import approval_keyboard
+from keyboards.admin_keyboards import reg_approval_keyboard
 from db.users_db import UsersTable
 
 router = Router()
@@ -64,7 +64,7 @@ async def process_name(message: Message, state: FSMContext):
         await message.bot.send_message(
             chat_id=admin_tg_id,
             text=f"Новый пользователь {name} (@{tg_username}) ожидает подтверждения.",
-            reply_markup=approval_keyboard(tg_id)
+            reply_markup=reg_approval_keyboard(tg_id)
         )
 
 
