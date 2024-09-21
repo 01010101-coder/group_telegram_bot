@@ -1,8 +1,0 @@
-aiogram<4.0
-pydantic-settings
-
-python-dotenv~=1.0.1
-aiosqlite~=0.20.0
-requests~=2.32.3
-pytz~=2024.2
-APScheduler~=3.10.4
