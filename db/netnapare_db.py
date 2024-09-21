@@ -1,6 +1,15 @@
 import aiosqlite
 import json
 
+from datetime import datetime
+
+pairs_time = {
+    1: "8:15",
+    2: "9:45",
+    3: "11:15",
+    4: "13:00",
+    5: "14:30"
+}
 
 class SkipTable:
     def __init__(self, db_path='my_database.db'):
@@ -68,6 +77,13 @@ class SkipTable:
         except aiosqlite.Error as e:
             print(f"Ошибка обновления approved: {e}")
             return False
+
+    async def get_absent_students_by_date(self, date):
+        # Подключение к базе данных и выполнение запроса
+        connection = await aiosqlite.connect('events.db')
+        async with connection.execute("SELECT tg_id, pairs, description FROM SkipHistory WHERE date = ?", (date,)) as cursor:
+            rows = await cursor.fetchall()
+            return [{'tg_id': row[0], 'pairs': row[1], 'description': row[2]} for row in rows]
 
 #     Добавить обновление пар, если один и тот же пользователь
 #     отмечает отсутствие на один и тот же день
