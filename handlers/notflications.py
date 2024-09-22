@@ -16,9 +16,8 @@ pairs_time = {
     3: "11:15",
     4: "13:00",
     5: "14:30",
-    6: (datetime.now(pytz.timezone('Europe/Moscow')) + timedelta(minutes=1)).strftime("%H:%M")
+    # 6: (datetime.now(pytz.timezone('Europe/Moscow')) + timedelta(minutes=1)).strftime("%H:%M")
 }
-print(pairs_time[6])
 
 
 # Асинхронная функция для проверки отсутствующих студентов
@@ -32,7 +31,7 @@ async def check_absent_students_for_time(pair_time):
 
         for student in absent_students:
             absent_pairs = eval(student['pairs'])
-
+            print(absent_pairs)
             for pair in absent_pairs:
                 if pairs_time[pair] == pair_time:
                     current_absent_students.append({
@@ -40,16 +39,18 @@ async def check_absent_students_for_time(pair_time):
                         'time': pairs_time[pair],
                         'reason': student['description']
                     })
-        print(absent_students)
+        # current_absent_students.append({'tg_id': , 'time': '23:46', 'reason': 'a'}) - заменить тг айди
 
         if current_absent_students:
             admins = await users_db.get_users_by_rank(3)
-
+            print(admins)
             for admin in admins:
                 admin_tg_id = admin[2]
                 message = "На этой паре отсутствуют:"
                 for student in current_absent_students:
-                    message += f"\n{student['tg_id']}: {student['reason']}"
+                    find_student = await users_db.get_user_by_tg_id(student['tg_id'])
+                    find_student = find_student[1]
+                    message += f"\n{find_student}: {student['reason']}"
                 print(message)
                 await bot.send_message(admin_tg_id, message)
 
