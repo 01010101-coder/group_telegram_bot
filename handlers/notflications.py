@@ -1,9 +1,11 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from datetime import datetime
+from datetime import datetime, timedelta
 import pytz
 
 from db.netnapare_db import SkipTable
 from db.users_db import UsersTable
+
+from bot_instance import bot
 
 skip_db = SkipTable()
 users_db = UsersTable()
@@ -13,8 +15,10 @@ pairs_time = {
     2: "09:45",
     3: "11:15",
     4: "13:00",
-    5: "14:30"
+    5: "14:30",
+    6: (datetime.now(pytz.timezone('Europe/Moscow')) + timedelta(minutes=1)).strftime("%H:%M")
 }
+print(pairs_time[6])
 
 
 # Асинхронная функция для проверки отсутствующих студентов
@@ -36,12 +40,18 @@ async def check_absent_students_for_time(pair_time):
                         'time': pairs_time[pair],
                         'reason': student['description']
                     })
+        print(absent_students)
 
-        # Если есть отсутствующие студенты, отправляем им сообщение через бота
-        # if current_absent_students:
-        #     for student in current_absent_students:
-        #         message = f"Напоминание: Вы отсутствуете на паре в {student['time']}.\nПричина: {student['reason']}"
-        #         await bot.send_message(student['tg_id'], message)
+        if current_absent_students:
+            admins = await users_db.get_users_by_rank(3)
+
+            for admin in admins:
+                admin_tg_id = admin[2]
+                message = "На этой паре отсутствуют:"
+                for student in current_absent_students:
+                    message += f"\n{student['tg_id']}: {student['reason']}"
+                print(message)
+                await bot.send_message(admin_tg_id, message)
 
     except Exception as e:
         print(f"Ошибка при проверке отсутствующих студентов: {e}")
@@ -59,6 +69,3 @@ def schedule_pair_checks():
 
     # Запуск планировщика
     scheduler.start()
-
-
-schedule_pair_checks()

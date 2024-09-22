@@ -80,7 +80,7 @@ class SkipTable:
 
     async def get_absent_students_by_date(self, date):
         # Подключение к базе данных и выполнение запроса
-        connection = await aiosqlite.connect('events.db')
+        connection = await self._connect()
         async with connection.execute("SELECT tg_id, pairs, description FROM SkipHistory WHERE date = ?", (date,)) as cursor:
             rows = await cursor.fetchall()
             return [{'tg_id': row[0], 'pairs': row[1], 'description': row[2]} for row in rows]

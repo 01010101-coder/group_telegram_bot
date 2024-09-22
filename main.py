@@ -1,28 +1,20 @@
-import asyncio
 import logging
-from aiogram import Bot, Dispatcher, F
-from dotenv import load_dotenv
-import os
+from aiogram import Dispatcher, F
+
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from middlewares import conf_middleware
 from handlers import registration, netnapare, general
+from handlers.notflications import schedule_pair_checks
 
 from db.users_db import UsersTable
 from db.netnapare_db import SkipTable
 from db.logs_db import LogsTable
 
+from bot_instance import bot
+
 logging.basicConfig(level=logging.INFO)
 
-load_dotenv('settings.env')
-
-bot_token = os.getenv("BOT_TOKEN")
-
-if not bot_token:
-    raise ValueError("Токен бота не найден. Проверьте файл settings.env.")
-
-# Инициализация бота и диспетчера
-bot = Bot(token=bot_token)
 dp = Dispatcher(storage=MemoryStorage())
 
 users_db = UsersTable()
@@ -35,11 +27,14 @@ async def on_startup():
     await skip_db.initialize_table()
     await log_db.initialize_table()
 
+    schedule_pair_checks()
+
 
 async def on_shutdown():
     await users_db.close()
     await skip_db.close()
     await log_db.close()
+
 
 async def main():
     await on_startup()
