@@ -16,10 +16,11 @@ class ConfirmationMiddleware(BaseMiddleware):
     ) -> Any:
         tg_id = data['event_from_user'].id
         user = await users_db.get_user_by_tg_id(tg_id)
-        bot: Bot = data['bot']  # Get the Bot instance from the data dictionary
+        bot: Bot = data['bot']  
 
         if user is None:
-            return await handler(event, data)
+            await bot.send_message(chat_id=tg_id, text="Напиши /start, чтобы зарегистрироваться")
+            return
 
         if user[4] == 0:
             await bot.send_message(chat_id=tg_id, text="Тебя еще не подтвердили")

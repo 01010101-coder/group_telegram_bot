@@ -33,3 +33,6 @@ def skip_approval_keyboard(tg_id: int, date: str) -> InlineKeyboardMarkup:
             ]
         ]
     )
+
+
+# def event_approval_keyboard()
